@@ -1,11 +1,17 @@
+#ifndef _TRACEINPUT_H_
+#define _TRACEINPUT_H_
+
 #include<iostream>
 #include<fstream>
 #include<sstream>
 #include<string>
+#include<vector>
 
 #include "define.h"
 #include "Debug.h"
 #include "Req.h"
+#include "baseStruct.h"
+#include "Port.h"
 using namespace std;
 
 class TraceInput{
@@ -14,19 +20,24 @@ private:
 	ifstream traceFile;
 	bool fileValid;
 	int lineNum;
+	MasterPort outPort;
 public:
 	//TraceInput(string tfn_):traceFileName(tfn){
 	//	traceFile.open(traceFileName);
 	//	if(!traceFile.is_open())
 	//		cout << "ERROR - Could not open the trace file, please check" << endl;
 	//}
-	TraceInput() = default;
+	//TraceInput() = default;
+	TraceInput():outPort(2, 0, 1){}
 
-	void init(const string);
+	void init(const string, vector<SlavePort*>);
+	vector<MasterPort*> get_outPort();
 	void debug_print() const;
 	void print() const;
 	string getTraceLine();
 	Req get_req();
+	void run_step();
+	void update();
 };
 
 
@@ -41,7 +52,9 @@ inline void splitStr(const string &origin, string &first, string &second){
 	return;
 }
 
-void TraceInput::init(const string tfn_){
+void TraceInput::init(const string tfn_, vector<SlavePort*> slavePort){
+	cout << "TraceInput init begin... " << endl;
+
 	traceFileName = tfn_;
 	traceFile.open(traceFileName);
 	if(!traceFile.is_open()){
@@ -51,6 +64,14 @@ void TraceInput::init(const string tfn_){
 	fileValid = true;
 	lineNum = 0;
 	cout << "The file " << traceFileName << " is open" << endl;
+	
+	outPort.add_slavePort(slavePort);
+	outPort.init_check();
+	cout << "TraceInput init ok!" << endl << endl;
+}
+
+vector<MasterPort*> TraceInput::get_outPort(){
+	return vector<MasterPort*>(1, &outPort);
 }
 
 inline void TraceInput::debug_print() const{
@@ -113,3 +134,17 @@ Req TraceInput::get_req(){
 	
 	return req;
 }
+
+void TraceInput::run_step(){
+	if(outPort.ready()){
+		Req req = get_req();
+		outPort.receive_req(req);
+	}
+}
+
+void TraceInput::update(){
+	outPort.send_req();
+}
+
+
+#endif

@@ -7,19 +7,27 @@
 #include "define.h"
 #include "Debug.h"
 #include "TraceInput.h"
+#include "MemorySystem.h"
 
 using namespace std;
 
 //global var
 
-bool init(int, char**, TraceInput &); //init the simulator for trace file, ini, etc
-void run_step(TraceInput &);
+bool init(int, char**, TraceInput &, MemorySystem &); //init the simulator for trace file, ini, etc
+void run_step(TraceInput &, MemorySystem &);
 
 int main(int argc, char **argv){
 
 	TraceInput traceInput;
-	init(argc, argv, traceInput);
-	run_step(traceInput);
+	MemorySystem memSystem;
+
+	init(argc, argv, traceInput, memSystem);
+
+	for(int i=0; i<10; i++){	
+		cout << "----------run " << i << " clock--------------" << endl;
+		run_step(traceInput, memSystem);
+		cout << "-----------------------------------" << endl << endl;
+	}
 
 	cout << "The simulator passed " << endl;
 	return 0;
@@ -27,7 +35,11 @@ int main(int argc, char **argv){
 
 
 
-bool init(int argc, char **argv, TraceInput &traceInput){
+bool init(int argc, char **argv, TraceInput &traceInput, MemorySystem &ms){
+	
+	cout << "DramSimu init begin..." << endl;
+	cout << "Load the param..." << endl << endl;
+
 	int opt;
 	char optstring[100] = "t:";
 	bool paramCorrect = true;
@@ -46,12 +58,14 @@ bool init(int argc, char **argv, TraceInput &traceInput){
 		}
 	}
 	
-	traceInput.init(traceFileName);
+	traceInput.init(traceFileName, ms.get_inPort());
+	ms.init(traceInput.get_outPort()); 
 	return paramCorrect;
 }
 
-void run_step(TraceInput &trace){
-	trace.get_req();	
-	trace.get_req();	
-	trace.get_req();	
+void run_step(TraceInput &traceInput, MemorySystem &memSystem){
+	traceInput.run_step();
+	memSystem.run_step();
+
+	traceInput.update();
 }

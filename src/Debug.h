@@ -1,3 +1,6 @@
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
+
 #include <iostream>
 using namespace std;
 
@@ -7,3 +10,5 @@ using namespace std;
 #else
 	#define DEBUG(str);
 #endif
+
+#endif //for file
