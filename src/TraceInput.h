@@ -28,10 +28,10 @@ public:
 	//		cout << "ERROR - Could not open the trace file, please check" << endl;
 	//}
 	//TraceInput() = default;
-	TraceInput():outPort(2, 0, 1){}
+	TraceInput():outPort("TraceInput_outPort", 1){}
 
-	void init(const string, vector<SlavePort*>);
-	vector<MasterPort*> get_outPort();
+	void init(const string, SlavePort*);
+	MasterPort* get_outPort();
 	void debug_print() const;
 	void print() const;
 	string getTraceLine();
@@ -49,10 +49,11 @@ inline void splitStr(const string &origin, string &first, string &second){
 		second = "";
 	else
 		second = origin.substr(nextIndex);
+
 	return;
 }
 
-void TraceInput::init(const string tfn_, vector<SlavePort*> slavePort){
+void TraceInput::init(const string tfn_, SlavePort *slavePort){
 	cout << "TraceInput init begin... " << endl;
 
 	traceFileName = tfn_;
@@ -70,8 +71,8 @@ void TraceInput::init(const string tfn_, vector<SlavePort*> slavePort){
 	cout << "TraceInput init ok!" << endl << endl;
 }
 
-vector<MasterPort*> TraceInput::get_outPort(){
-	return vector<MasterPort*>(1, &outPort);
+inline MasterPort* TraceInput::get_outPort(){
+	return &outPort;
 }
 
 inline void TraceInput::debug_print() const{
@@ -138,7 +139,8 @@ Req TraceInput::get_req(){
 void TraceInput::run_step(){
 	if(outPort.ready()){
 		Req req = get_req();
-		outPort.receive_req(req);
+		if(req.valid)
+			outPort.receive_req(req);
 	}
 }
 

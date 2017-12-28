@@ -17,21 +17,21 @@ class MemorySystem{
 private:
 	SlavePort inPort;
 public:
-	MemorySystem():inPort(1, 0, 1){}
+	MemorySystem():inPort("MemorySystem_inPort", 1){}
 	void print_inPortReq(){
 		if(inPort.valid()){
 			Req tmp = inPort.get_req();
 			tmp.print();
 		}
 	}
-	void init(vector<MasterPort*> masterPort){
+	void init(MasterPort* masterPort){
 		cout << "MemorySystem init begin..." << endl;
 		inPort.add_masterPort(masterPort);
 		inPort.init_check();
 		cout << "MemorySystem init ok!" << endl << endl;
 	}
-	vector<SlavePort*> get_inPort(){
-		return vector<SlavePort*>(1, &inPort);
+	SlavePort* get_inPort(){
+		return &inPort;
 	}
 	void run_step(){
 		print_inPortReq();

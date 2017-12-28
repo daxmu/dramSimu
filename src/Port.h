@@ -4,85 +4,82 @@
 #include <iostream>
 #include <deque>
 #include <vector>
+#include <string>
 
-#include"define.h"
+#include "define.h"
 #include "Req.h"
 #include "baseStruct.h"
 
 using namespace std;
 
-class SlavePort;
-
-class MasterPort{
-private:
+class Port{
+protected:
+	string portName;
 	FIFO<Req> reqBuffer;
 	int BufferLength;
-	vector<SlavePort*> slave; 
-	const int routeBit;
-	const uint8_t slaveNum;
+	Port *linkPort;
 public:
-	MasterPort(int l, int routeBit_ = 0, int slaveNum_ = 1): reqBuffer(l), BufferLength(l), routeBit(routeBit_), slaveNum(slaveNum_){}
+	Port(string name = "Unset", int l=1): portName(name), reqBuffer(l), BufferLength(l), linkPort(NULL){}
+	const string& get_name();
+	void add_linkPort(Port*);
 	bool init_check();
-	void add_slavePort(SlavePort*);
-	void add_slavePort(vector<SlavePort*>);
-	bool send_req();
-	bool ready();
-	bool receive_req(Req);
-};
-
-class SlavePort{
-private:
-	FIFO<Req> reqBuffer;
-	int BufferLength;
-	vector<MasterPort*> master;
-	const int routeBit;
-	const uint8_t masterNum;
-public:
-	SlavePort(int l, int routeBit_ = 0, int masterNum_ = 1): reqBuffer(l), BufferLength(l), routeBit(routeBit_), masterNum(masterNum_){}
-	bool init_check();
-	void add_masterPort(MasterPort*);
-	void add_masterPort(vector<MasterPort*>);
-	void ret_req();
-	bool ready();
-	bool receive_req(Req);
 	bool valid();
-	Req	 get_req();
+	bool ready();
+	bool receive_req(Req);
 };
 
-bool MasterPort::init_check(){
-	if(slave.size() == slaveNum){
-		cout << "MasterPort init ok" << endl;	
-		return true;
-	}
-	cout << "ERROR - MasterPort has wrong number of SlavePort with slaveNum" << endl;
-	cout << "slave.size(): " << slave.size() << "  slaveNum: " << slaveNum << endl;
-	return false;
-}
+class MasterPort: public Port{
+public:
+	MasterPort(string name = "Unset", int l=1):Port(name,l){}
+	bool send_req();
+	void add_slavePort(Port*);
+};
 
-void MasterPort::add_slavePort(SlavePort* s){
-	if(slave.size() >= slaveNum){
-		cout << "ERROR - Add more slaves than slaveNum" << endl;
+class SlavePort: public Port{
+public:
+	SlavePort(string name = "Unset", int l=1):Port(name,l){}
+	Req get_req();
+	void add_masterPort(Port*);
+};
+
+inline void Port::add_linkPort(Port* port_){
+	if(linkPort != NULL){
+		cout << "ERROR - add more than one Port to " << portName << endl;
 		exit(0);
-		return;
 	}
-	slave.push_back(s);
+	linkPort = port_;
 }
 
-void MasterPort::add_slavePort(vector<SlavePort*> s){
-	for(auto i = s.begin(); i < s.end(); i++)
-		add_slavePort(*i);
+inline bool Port::init_check(){
+	if(linkPort == NULL){
+		cout << "Warning - " << portName << " linkPort is NULL in init_check" << endl;
+		return false;
+	}
+	return true;
 }
 
-// when send a req, we get the req from the reqBuffer, and route it to it's slave, then verify the
-// slave can receive it or not. if it can receive, pop the req and send it to the slave
-bool MasterPort::send_req(){
-	if(!reqBuffer.is_empty()){
-		const Req &tmp = reqBuffer.get_head();
-		Addr addr = tmp.addr;
-		int num = (addr >> routeBit) & (slaveNum-1);
-		if(slave[num]->ready()){
+inline bool Port::valid(){
+	return !reqBuffer.is_empty();
+}
+
+inline bool Port::ready(){
+	return !reqBuffer.is_full();
+}
+
+inline bool Port::receive_req(Req req){
+	if(!ready()){
+		cout << "ERROR - " << portName << " is not ready() and asked receive_req" << endl;
+		return false;
+	}
+	reqBuffer.write(req);
+	return true;
+}
+
+inline bool MasterPort::send_req(){
+	if(valid()){
+		if(linkPort->ready()){
 			Req req = reqBuffer.read();
-			slave[num]->receive_req(req);
+			linkPort->receive_req(req);
 			return true;
 		}
 		return false;
@@ -90,76 +87,20 @@ bool MasterPort::send_req(){
 	return false;
 }
 
-bool MasterPort::ready(){
-	return !reqBuffer.is_full();
+inline void MasterPort::add_slavePort(Port* port_){
+	add_linkPort(port_);
 }
 
-bool MasterPort::receive_req(Req a){
-	if(reqBuffer.is_full()){
-		cout << "ERROR - master reqBuffer is full in receive_req " << endl;
-		return false;
-	}
-	reqBuffer.write(a);
-	return true;
-}
-
-
-
-
-
-
-
-
-
-
-
-bool SlavePort::init_check(){
-	if(master.size() == masterNum){
-		cout << "MasterPort init ok" << endl;	
-		return true;
-	}
-	cout << "ERROR - MasterPort has wrong number of MasterPort with masterNum" << endl;
-	cout << "master.size(): " << master.size() << "  masterNum: " << masterNum << endl;
-	return false;
-}
-
-void SlavePort::add_masterPort(MasterPort* m){
-	if(master.size() >= masterNum){
-		cout << "ERROR - Add more masters than masterNum" << endl;
-		exit(0);
-		return;
-	}
-	master.push_back(m);
-}
-void SlavePort::add_masterPort(vector<MasterPort*> m){
-	for(auto i = m.begin(); i < m.end(); i++)
-		add_masterPort(*i);
-}
-
-bool SlavePort::ready(){
-	return !reqBuffer.is_full();
-}
-bool SlavePort::valid(){
-	return !reqBuffer.is_empty();
-}
-
-bool SlavePort::receive_req(Req a){
-	if(reqBuffer.is_full()){
-		cout << "ERROR - slave reqBuffer is full in receive_req " << endl;
-		return false;
-	}
-	reqBuffer.write(a);
-	return true;
-}
-
-void SlavePort::ret_req(){}
-
-Req SlavePort::get_req(){
-	if(!valid()){
-		cout << "ERROR - slave reqBuffer is empty in get_req" << endl;
+inline Req SlavePort::get_req(){
+	if(valid())
+		return reqBuffer.read();
+	else{
+		cout << "ERROR - " << portName << " is not valid and asked get_req()" << endl;
 		exit(0);
 	}
-	return reqBuffer.read();
+}
+inline void SlavePort::add_masterPort(Port* port_){
+	add_linkPort(port_);
 }
 
 #endif

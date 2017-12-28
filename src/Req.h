@@ -15,10 +15,12 @@ struct Req{
 	bool write;
 	uint64_t data;
 	bool valid;
+	int masterId;
 
 	void print(){
 		cout << "------------------Req print----------------" << endl;
 		cout << "addr: " << addr << endl
+			 << "masterId " << masterId << endl
 			 << "cs: " << cs << endl
 			 << "cid: " << cid << endl
 			 << "bg: " << bg << endl

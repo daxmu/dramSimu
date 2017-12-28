@@ -23,7 +23,7 @@ int main(int argc, char **argv){
 
 	init(argc, argv, traceInput, memSystem);
 
-	for(int i=0; i<10; i++){	
+	for(int i=0; i<100; i++){	
 		cout << "----------run " << i << " clock--------------" << endl;
 		run_step(traceInput, memSystem);
 		cout << "-----------------------------------" << endl << endl;
