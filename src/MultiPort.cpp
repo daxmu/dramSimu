@@ -6,7 +6,8 @@ void MultiPort::add_masterPort(Port* port_){
 
 void MultiPort::add_slavePort(vector<Port*> port_v){
 	if(port_v.size() != outPort.size()){
-		cout << "ERROR - add incorrect number slavePort to " << multiPortName << " in add_slavePort" << endl;
+		cout << "ERROR - add incorrect number slavePort to " << multiPortName << " in add_slavePort"
+			 << endl;
 		cout << port_v.size() << " " << outPort.size() << " " << outPortNum << endl;
 		exit(0);
 	}
@@ -39,7 +40,8 @@ bool MultiPort::init_check(){
 	// if the outPortNum is not 2^n, and we use the addr to splict the request to different slaves,
 	// we will let the extra slaves get not request forever or let some request has no slaves to send
 	if(outPortNum&(outPortNum-1))
-		cout << "Warning - " << multiPortName << "'s outPortNum is not 2^n, may have some invalid modules" << endl;
+		cout << "Warning - " << multiPortName 
+			 << "'s outPortNum is not 2^n, may have some invalid modules" << endl;
 	
 	cout << "    " << multiPortName << " init check ok" << endl;
 

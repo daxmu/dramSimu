@@ -1,6 +1,4 @@
 #include<iostream>
-//#include<stdio.h>
-//#include<stdlib.h>
 #include<getopt.h>
 #include<string>
 
@@ -19,7 +17,7 @@ void run_step(TraceInput &, MemorySystem &);
 int main(int argc, char **argv){
 
 	TraceInput traceInput;
-	MemorySystem memSystem(2,4);
+	MemorySystem memSystem(CHANNEL_NUM, CHANNEL_ROUTEBIT);
 
 	init(argc, argv, traceInput, memSystem);
 

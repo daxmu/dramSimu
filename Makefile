@@ -8,6 +8,7 @@ TARGET = run
 
 SRC_FIL += $(SRC_DIR)/define.h
 SRC_FIL += $(SRC_DIR)/Debug.h
+SRC_FIL += $(SRC_DIR)/func.cpp
 SRC_FIL += $(SRC_DIR)/Req.h
 SRC_FIL += $(SRC_DIR)/baseStruct.h
 SRC_FIL += $(SRC_DIR)/Port.cpp

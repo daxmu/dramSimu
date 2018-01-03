@@ -17,15 +17,14 @@ private:
 public:
 	Controller(int id = 0):ControllerId(id), inPort("Controller_inPort", 1){}
 
-	void print_inPortReq();
+	void print_inPortReq(const Req&);
 	void init(MasterPort*);
-
 	SlavePort* get_inPort(){
 		return &inPort;
 	}
-	void run_step(){
-		print_inPortReq();
-	}
+
+	void map_addr(Req&);
+	void run_step();
 	void update(){}
 };
 
