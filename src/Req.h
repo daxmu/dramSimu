@@ -18,7 +18,7 @@ struct Req{
 	int masterId;
 
 	void print(){
-		cout << "------------------Req print----------------" << endl;
+		//cout << "------------------Req print----------------" << endl;
 		cout << "addr: " << addr << endl
 			 << "masterId " << masterId << endl
 			 << "cs: " << cs << endl

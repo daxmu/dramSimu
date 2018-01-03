@@ -5,7 +5,6 @@
 #include<deque>
 #include"define.h"
 
-
 using namespace std;
 
 template <class T>

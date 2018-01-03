@@ -19,7 +19,7 @@ void run_step(TraceInput &, MemorySystem &);
 int main(int argc, char **argv){
 
 	TraceInput traceInput;
-	MemorySystem memSystem;
+	MemorySystem memSystem(2,4);
 
 	init(argc, argv, traceInput, memSystem);
 
@@ -68,4 +68,5 @@ void run_step(TraceInput &traceInput, MemorySystem &memSystem){
 	memSystem.run_step();
 
 	traceInput.update();
+	memSystem.update();
 }

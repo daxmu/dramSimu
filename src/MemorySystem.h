@@ -10,32 +10,33 @@
 #include "Debug.h"
 #include "Req.h"
 #include "Port.h"
+#include "MultiPort.h"
+#include "Controller.h"
 
 using namespace std;
 
 class MemorySystem{
 private:
-	SlavePort inPort;
+	int channelNum;
+	MultiPort routePort;
+	vector<Controller> channels;
 public:
-	MemorySystem():inPort("MemorySystem_inPort", 1){}
-	void print_inPortReq(){
-		if(inPort.valid()){
-			Req tmp = inPort.get_req();
-			tmp.print();
+	MemorySystem(int channelNum_ = 1, int routeBit_ = 0):
+	channelNum(channelNum_), routePort("MemorySystem_routePort", 1, routeBit_, channelNum){
+		for(int i = 0; i < channelNum; i++){
+			Controller tmp(i);
+			channels.push_back(tmp);
 		}
 	}
-	void init(MasterPort* masterPort){
-		cout << "MemorySystem init begin..." << endl;
-		inPort.add_masterPort(masterPort);
-		inPort.init_check();
-		cout << "MemorySystem init ok!" << endl << endl;
-	}
 	SlavePort* get_inPort(){
-		return &inPort;
+		return routePort.get_inPort();
 	}
-	void run_step(){
-		print_inPortReq();
-	}
-};
 
+	void init(MasterPort*);
+	void run_step();
+	void update();
+
+};
 #endif
+
+

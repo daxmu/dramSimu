@@ -3,3 +3,6 @@ run
 *.swp
 log
 trash_bin
+gitdiff
+my_trace.trc
+bakFile
