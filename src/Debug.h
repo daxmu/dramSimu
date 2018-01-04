@@ -2,11 +2,9 @@
 #define _DEBUG_H_
 
 #include <iostream>
-using namespace std;
-
 
 #ifdef DEBUG_PRINT
-	#define DEBUG(str) cout << str << endl;
+	#define DEBUG(str) std::cout << str << std::endl;
 #else
 	#define DEBUG(str);
 #endif

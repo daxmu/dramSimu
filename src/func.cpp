@@ -23,3 +23,4 @@ Addr get_corBits(Addr a, std::size_t num, std::size_t pos){
 	return (a >> pos) & validBit;
 }
 
+

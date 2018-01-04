@@ -34,5 +34,9 @@ uint64_t LOG2(uint64_t a);
 uint64_t POW2(uint64_t a);
 Addr get_corBits(Addr, std::size_t, std::size_t);
 
+template<class T>
+inline const T& max(const T &a, const T &b){
+	return a > b ? a : b;
+}
 
 #endif
