@@ -21,6 +21,11 @@ void MemorySystem::init(MasterPort* masterPort){
 	cout << "MemorySystem init ok!" << endl << endl;
 }
 
+void MemorySystem::print_summary(std::size_t cycles){
+	for(auto i = channels.begin(); i < channels.end(); i++){
+		(*i).print_summary(cycles);
+	}
+}
 void MemorySystem::run_step(){
 	routePort.run_step();
 	for(auto i = channels.begin(); i < channels.end(); i++)

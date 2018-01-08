@@ -13,13 +13,11 @@
 #include "MultiPort.h"
 #include "Controller.h"
 
-using namespace std;
-
 class MemorySystem{
 private:
 	int channelNum;
 	MultiPort routePort;
-	vector<Controller> channels;
+	std::vector<Controller> channels;
 public:
 	MemorySystem(int channelNum_ = 1, int routeBit_ = 0):
 	channelNum(channelNum_), routePort("MemorySystem_routePort", 1, routeBit_, channelNum){
@@ -33,6 +31,7 @@ public:
 	}
 
 	void init(MasterPort*);
+	void print_summary(std::size_t cycles);
 	void run_step();
 	void update();
 

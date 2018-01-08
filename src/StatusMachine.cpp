@@ -201,7 +201,14 @@ bool BankStatusMachine::send_wr(const Req& req){
 	return correct;
 }
 
-void BankStatusMachine::run_step(){
+bool BankStatusMachine::send_ref(){
+	curStatus = idle;
+	return true;
+}
+
+void BankStatusMachine::run_step(){}
+
+void BankStatusMachine::update(){
 	if(preCnt!=0)
 		preCnt--;
 	if(actCnt!=0)
@@ -212,14 +219,16 @@ void BankStatusMachine::run_step(){
 		wrCnt--;
 }
 
-void BankStatusMachine::update(){}
-
 
 CsStatusMachine::CsStatusMachine(int csId_, int bankNum_)
 	:csId(csId_),
 	 bankNum(bankNum_),
 	 fawCnt(0),
-	 rrdCnt(0){
+	 rrdCnt(0),
+	 refCnt(tREF),
+	 rfcCnt(0),
+	 curStatus(idle)
+	 {
 	 	for(unsigned int i = 0; i < bankNum; i++){
 			BankStatusMachine tmp(i);
 			bsm.push_back(tmp);	
@@ -269,6 +278,14 @@ CmdStatus CsStatusMachine::get_cmdStatus(const Req& req){
 	if((fawCnt != 0) || (rrdCnt != 0)){
 		tmp.gntAct = 0;
 	}
+
+	if(curStatus == ref){
+		tmp.gntPre = 0;
+		tmp.gntAct = 0;
+		tmp.gntWr = 0;
+		tmp.gntRd = 0;
+	}
+
 	return tmp;
 }
 
@@ -339,16 +356,60 @@ bool CsStatusMachine::send_wr(const Req& req){
 	return correct;
 }
 
+bool CsStatusMachine::need_refresh(){
+	if(curStatus == idle){
+		if(refCnt == 0)
+			return true;
+	}
+	return false;
+}
+
+bool CsStatusMachine::send_ref(){
+
+	bool correct = true;
+
+	if(curStatus != idle){
+		cout << "Error - send ref request in not idle status in send_ref()" << endl;
+		correct = false;
+	}
+
+	for(auto i = bsm.begin(); i < bsm.end(); i++){
+		(*i).send_ref();
+	}
+
+	curStatus = ref;
+	rfcCnt = tRFC;
+
+	return correct;
+}
+
 void CsStatusMachine::run_step(){
+}
+
+void CsStatusMachine::update(){
+	if(curStatus == ref){
+		if(rfcCnt != 0)
+			rfcCnt --;
+		else{
+			curStatus = idle;
+			refCnt = tREF;
+			cout << "    Refresh end and status change to idle in cs " << csId << endl;
+		}
+	}
+	else{
+		if(refCnt != 0)
+			refCnt --;
+		else
+			cout << "Error - refCnt = 0 and not send ref request in update()" << endl;
+	}
+
 	if(fawCnt != 0)
 		fawCnt--;
 	if(rrdCnt != 0)
 		rrdCnt--;
 	act_add();
 	for(auto i = bsm.begin(); i < bsm.end(); i++){
-		(*i).run_step();
+		(*i).update();
 	}
 }
-
-void CsStatusMachine::update(){}
 

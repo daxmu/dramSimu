@@ -16,7 +16,8 @@ bool init(int, char**, TraceInput &, MemorySystem &, int &); //init the simulato
 void run_step(TraceInput &, MemorySystem &);
 
 int main(int argc, char **argv){
-
+	
+	time_t start_c = clock();
 	int Cycles = 100;
 	TraceInput traceInput;
 	MemorySystem memSystem(CHANNEL_NUM, CHANNEL_ROUTEBIT);
@@ -30,7 +31,10 @@ int main(int argc, char **argv){
 		run_step(traceInput, memSystem);
 		cout << "-----------------------------------" << endl << endl;
 	}
+	memSystem.print_summary(Cycles);
 
+	time_t end_c = clock();
+	cout << "run time: " << (double(end_c - start_c)) / CLOCKS_PER_SEC << "s" << endl; 
 	cout << "The simulator passed " << endl;
 	return 0;
 }

@@ -24,8 +24,9 @@ public:
 	SlavePort* get_inPort(){
 		return &inPort;
 	}
-
 	void map_addr(Req&);
+
+	void print_summary(std::size_t cycles);
 	void run_step();
 	void update();
 };

@@ -32,7 +32,12 @@ void Controller::map_addr(Req& req){
 			  (get_corBits(req.addr, ROW_HIGHBIT_NUM, ROW_HIGHBIT_POS) << ROW_LOWBIT_NUM);
 }
 	
-	
+void Controller::print_summary(std::size_t cycles){
+	cout << "Controller " << ControllerId << " print summary:" << endl;
+	cmdq.print_summary(cycles);
+	cout << endl;
+}
+
 void Controller::run_step(){
 	cout << "Controller " << ControllerId << " run_step()..." << endl;
 	if(inPort.valid()){

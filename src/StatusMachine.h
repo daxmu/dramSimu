@@ -40,6 +40,7 @@ public:
 	bool send_act(const Req&);
 	bool send_rd(const Req&);
 	bool send_wr(const Req&);
+	bool send_ref();
 	void run_step();
 	void update();
 
@@ -47,12 +48,16 @@ public:
 
 class CsStatusMachine{
 private:
+	enum Status {idle, preref, ref};
 	std::size_t csId;
 	std::size_t bankNum;
 	std::size_t fawCnt;
 	std::size_t rrdCnt;
+	std::size_t refCnt;
+	std::size_t rfcCnt;
 	std::deque<std::size_t> actQueue;
 	std::vector<BankStatusMachine> bsm;
+	Status curStatus;
 	
 	void act_push(std::size_t time = 0);
 	void act_add();
@@ -63,6 +68,8 @@ public:
 	bool send_act(const Req&);
 	bool send_rd(const Req&);
 	bool send_wr(const Req&);
+	bool need_refresh();
+	bool send_ref();
 	void run_step();
 	void update();
 };

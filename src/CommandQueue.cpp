@@ -5,6 +5,11 @@ using namespace std;
 CommandQueue::CommandQueue(int csNum_, int qLen_, int bankNum_)
 	:csNum(csNum_), 
 	qLen(qLen_),
+	rdCounter(0),
+	wrCounter(0),
+	reqCounter(0),
+	preCounter(0),
+	actCounter(0),
 	cmdq(qLen){
 		for(std::size_t i = 0; i < csNum; i++){
 			CsStatusMachine tmp(i, bankNum_);
@@ -43,12 +48,19 @@ bool CommandQueue::check_status(const CmdStatus &status){
 	return true;
 }
 
+void CommandQueue::pop_req(){
+	cmdq.read();
+	reqCounter++;
+	cout << "    CommnadQueue solved req " << reqCounter << endl;
+}
+
 void CommandQueue::send_pre(const Req& req){
 	cout << "    CommandQueue send pre to cs " << req.cs << ", bank " << req.bank << " ";
 	if(csm[req.cs].send_pre(req))
 		cout << "Success!" << endl;
 	else
 		cout << "Failed!" << endl;
+	preCounter++;
 }
 void CommandQueue::send_act(const Req& req){
 	cout << "    CommandQueue send act to cs " << req.cs << ", bank " << req.bank << " ";
@@ -56,6 +68,7 @@ void CommandQueue::send_act(const Req& req){
 		cout << "Success!" << endl;
 	else
 		cout << "Failed!" << endl;
+	actCounter++;
 }
 void CommandQueue::send_rd(const Req& req){
 	cout << "    CommandQueue send rd to cs " << req.cs << ", bank " << req.bank << " ";
@@ -63,7 +76,8 @@ void CommandQueue::send_rd(const Req& req){
 		cout << "Success!" << endl;
 	else
 		cout << "Failed!" << endl;
-	cmdq.read();
+	pop_req();
+	rdCounter++;
 }
 void CommandQueue::send_wr(const Req& req){
 	cout << "    CommandQueue send wr to cs " << req.cs << ", bank " << req.bank << " ";
@@ -71,22 +85,44 @@ void CommandQueue::send_wr(const Req& req){
 		cout << "Success!" << endl;
 	else
 		cout << "Failed!" << endl;
-	cmdq.read();
+	pop_req();
+	wrCounter++;
 }
 
+
+void CommandQueue::refresh_control(){
+	for(auto i = csm.begin(); i < csm.end(); i++){
+		if((*i).need_refresh()){
+			(*i).send_ref();
+			cout << "    CommandQueue send ref to CS " << i - csm.begin() << endl;
+		}
+	}
+}
 void CommandQueue::print_status(){
 	cout << "CommandQueue print_status***" << endl;
 	cmdq.print_status();
 }
 
+void CommandQueue::print_summary(){
+	cout << "    rd request num: " << rdCounter << endl 
+		 << "    wr request num: " << wrCounter << endl
+		 << "    rw summary: " << reqCounter << endl 
+		 << endl 
+		 << "    pre command num: " << preCounter << endl
+		 << "    act command num: " << preCounter << endl;
+}
+
+void CommandQueue::print_summary(std::size_t cycles){
+	print_summary();
+	cout << "    the bus occupied rate = " << ((double)reqCounter*4/cycles) << endl;
+}
+
 void CommandQueue::run_step(){
 	print_status();
 
+	refresh_control();
 	if(!valid()){
 		//cout << "    CommandQueue not valid " << endl;
-		for(auto i = csm.begin(); i < csm.end(); i++){
-			(*i).run_step();
-		}
 		return;
 	}
 	const Req &tmp = cmdq.get_head();
@@ -110,13 +146,13 @@ void CommandQueue::run_step(){
 		send_rd(tmp);
 	if(tmpStatus.needWr && tmpStatus.gntWr)
 		send_wr(tmp);
-	
-	for(auto i = csm.begin(); i < csm.end(); i++){
-		(*i).run_step();
-	}
-
 }
 
-void CommandQueue::update(){}
+void CommandQueue::update(){
+	for(auto i = csm.begin(); i < csm.end(); i++){
+		(*i).update();
+	}
+}
+
 
 
