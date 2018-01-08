@@ -24,7 +24,7 @@ public:
 	MemorySystem(int channelNum_ = 1, int routeBit_ = 0):
 	channelNum(channelNum_), routePort("MemorySystem_routePort", 1, routeBit_, channelNum){
 		for(int i = 0; i < channelNum; i++){
-			Controller tmp(i);
+			Controller tmp(i, CS_NUM, COMMAND_QUEUE_LENGTH, BANK_NUM);
 			channels.push_back(tmp);
 		}
 	}

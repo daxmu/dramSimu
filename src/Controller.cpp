@@ -1,5 +1,10 @@
 #include "Controller.h"
 
+Controller::Controller(int id, int csNum_, int qLen_, int bankNum_)
+	:ControllerId(id),
+	 inPort("Controller_inPort", 1),
+	 cmdq(csNum_, qLen_, bankNum_){}
+
 void Controller::print_inPortReq(const Req& req){
 	cout << "*********Controller" << ControllerId << " print inPort Req************" << endl;
 	req.print();
@@ -29,10 +34,20 @@ void Controller::map_addr(Req& req){
 	
 	
 void Controller::run_step(){
+	cout << "Controller " << ControllerId << " run_step()..." << endl;
 	if(inPort.valid()){
-		Req req = inPort.get_req();
-		print_inPortReq(req);
-		map_addr(req);
-		req.print();
+		if(cmdq.ready()){
+			Req req = inPort.get_req();
+			map_addr(req);
+			cmdq.receive_req(req);
+		}
 	}
+	
+	cmdq.run_step();
 }
+
+void Controller::update(){
+	cmdq.update();
+}
+
+

@@ -3,7 +3,6 @@
 
 #include<iostream>
 #include "define.h"
-using namespace std;
 
 struct Req{
 	Addr addr;
@@ -13,26 +12,26 @@ struct Req{
 	std::size_t bank;
 	std::size_t row;
 	std::size_t col;
+	std::size_t data;
 	bool write;
-	uint64_t data;
 	bool valid;
 	int masterId;
 
 	void print() const {
-		//cout << "------------------Req print----------------" << endl;
-		cout << hex;
-		cout << "addr: " 	<< addr << endl
-			 << "masterId " << masterId << endl
-			 << "cs: " 		<< cs << endl
-			 << "cid: " 	<< cid << endl
-			 << "bg: " 		<< bg << endl
-			 << "bank: " 	<< bank << endl
-			 << "row: " 	<< row << endl
-			 << "col: " 	<< col << endl
-			 << "write: " 	<< write << endl
-			 << "data: " 	<< data << endl
-			 << "valid: " 	<< valid << endl;
-		cout << dec;
+		//std::cout << "------------------Req print----------------" << std::endl;
+		std::cout << std::hex;
+		std::cout << "addr: " 	<< addr << std::endl
+			 << "masterId " << masterId << std::endl
+			 << "cs: " 		<< cs << std::endl
+			 << "cid: " 	<< cid << std::endl
+			 << "bg: " 		<< bg << std::endl
+			 << "bank: " 	<< bank << std::endl
+			 << "row: " 	<< row << std::endl
+			 << "col: " 	<< col << std::endl
+			 << "write: " 	<< write << std::endl
+			 << "data: " 	<< data << std::endl
+			 << "valid: " 	<< valid << std::endl;
+		std::cout << std::dec;
 	}
 };
 

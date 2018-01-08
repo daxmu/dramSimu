@@ -5,12 +5,10 @@
 #include<deque>
 #include"define.h"
 
-using namespace std;
-
 template <class T>
 class FIFO{
 private:
-	deque<T> queue;
+	std::deque<T> queue;
 	uint32_t length;
 public:
 	FIFO() = default;
@@ -23,7 +21,7 @@ public:
 	bool is_full() const{
 	#ifdef DEBUG_PRINT
 		if(queue.size() > length){
-			cout << "ERROR - FIFO is overflow in is_full" << endl;
+			std::cout << "ERROR - FIFO is overflow in is_full" << std::endl;
 		}
 	#endif
 		return queue.size() >= length;
@@ -34,7 +32,7 @@ public:
 	bool write(const T a){
 	#ifdef DEBUG_PRINT
 		if(queue.size() > length){
-			cout << "ERROR - FIFO is overflow in write" << endl;
+			std::cout << "ERROR - FIFO is overflow in write" << std::endl;
 		}
 	#endif
 		if(queue.size() < length){
@@ -46,7 +44,7 @@ public:
 	T read(){
 	#ifdef DEBUG_PRINT
 		if(queue.empty()){
-			cout << "ERROR - FIFO is empty in read" << endl;
+			std::cout << "ERROR - FIFO is empty in read" << std::endl;
 			return T{0};
 		}
 	#endif
@@ -57,11 +55,17 @@ public:
 	const T& get_head(){
 	#ifdef DEBUG_PRINT
 		if(queue.empty()){
-			cout << "ERROR - FIFO is empty in read" << endl;
+			std::cout << "ERROR - FIFO is empty in read" << std::endl;
 			exit(0);
 		}
 	#endif
 		return queue[0];
+	}
+	void print_status(){
+		std::cout << "    " << queue.size() << std::endl;
+		for(auto i = queue.rbegin(); i < queue.rend(); i++){
+			std::cout << "    " << std::hex << (*i).addr << std::dec << std::endl;
+		}
 	}
 };
 

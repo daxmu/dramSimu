@@ -7,6 +7,7 @@
 #include "Debug.h"
 #include "Req.h"
 #include "Port.h"
+#include "CommandQueue.h"
 
 using namespace std;
 
@@ -14,8 +15,9 @@ class Controller{
 private:
 	int ControllerId;
 	SlavePort inPort;
+	CommandQueue cmdq;
 public:
-	Controller(int id = 0):ControllerId(id), inPort("Controller_inPort", 1){}
+	Controller(int id, int csNum_, int qLen_, int bankNum_);
 
 	void print_inPortReq(const Req&);
 	void init(MasterPort*);
@@ -25,7 +27,7 @@ public:
 
 	void map_addr(Req&);
 	void run_step();
-	void update(){}
+	void update();
 };
 
 
