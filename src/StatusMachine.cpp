@@ -225,6 +225,10 @@ CsStatusMachine::CsStatusMachine(int csId_, int bankNum_)
 	 bankNum(bankNum_),
 	 fawCnt(0),
 	 rrdCnt(0),
+	 preCnt(0),
+	 actCnt(0),
+	 rdCnt(0),
+	 wrCnt(0),
 	 refCnt(tREF),
 	 rfcCnt(0),
 	 curStatus(idle)
@@ -278,6 +282,14 @@ CmdStatus CsStatusMachine::get_cmdStatus(const Req& req){
 	if((fawCnt != 0) || (rrdCnt != 0)){
 		tmp.gntAct = 0;
 	}
+	if(preCnt != 0)
+		tmp.gntPre = 0;
+	if(actCnt != 0)
+		tmp.gntAct = 0;
+	if(rdCnt != 0)
+		tmp.gntRd = 0;
+	if(wrCnt != 0)
+		tmp.gntWr = 0;
 
 	if(curStatus == ref){
 		tmp.gntPre = 0;
@@ -291,29 +303,36 @@ CmdStatus CsStatusMachine::get_cmdStatus(const Req& req){
 
 bool CsStatusMachine::send_pre(const Req& req){
 
-	bool correct;
+	bool correct = true;
 	
 	if(req.bank >= bankNum){
 		cout << "ERROR - req.bank >= bankNum in CsSM.send_pre" << endl;
 		exit(0);
 	}
+	if(preCnt != 0){
+		cout << "Error - send pre req but preCnt!=0 in CsSM.send_pre" << endl;
+		correct = false;
+	}
 	
-	correct = bsm[req.bank].send_pre(req);
+	correct = correct && bsm[req.bank].send_pre(req);
+
+	rdCnt	= max_(rdCnt, t_p2r_samecs);
+	wrCnt	= max_(wrCnt, t_p2w_samecs);
+	preCnt	= max_(preCnt, t_p2p_samecs);
+	actCnt	= max_(actCnt, t_p2a_samecs);
 
 	return correct;
 }
 
 bool CsStatusMachine::send_act(const Req& req){
 
-	bool correct;
+	bool correct = true;
 	
 	if(req.bank >= bankNum){
 		cout << "ERROR - req.bank >= bankNum in CsSM.send_act" << endl;
 		exit(0);
 	}
 	
-	correct = bsm[req.bank].send_act(req);
-
 	if(rrdCnt != 0){
 		cout << "Error - send act req but rrdCnt!=0 in CsSM.send_act" << endl;
 		correct = false;
@@ -322,43 +341,73 @@ bool CsStatusMachine::send_act(const Req& req){
 		cout << "Error - send act req but fawCnt!=0 in CsSM.send_act" << endl;
 		correct = false;
 	}
+	if(actCnt != 0){
+		cout << "Error - send act req but actCnt!=0 in CsSM.send_act" << endl;
+		correct = false;
+	}
+
+	correct = correct && bsm[req.bank].send_act(req);
+
 
 	act_push();
 	rrdCnt = tRRD;
+	rdCnt	= max_(rdCnt, t_a2r_samecs);
+	wrCnt	= max_(wrCnt, t_a2w_samecs);
+	preCnt	= max_(preCnt, t_a2p_samecs);
+	actCnt	= max_(actCnt, t_a2a_samecs);
+
 	return correct;
 }
 
 bool CsStatusMachine::send_rd(const Req& req){
 
-	bool correct;
+	bool correct = true;
 	
 	if(req.bank >= bankNum){
 		cout << "ERROR - req.bank >= bankNum in CsSM.send_rd" << endl;
 		exit(0);
 	}
+	if(rdCnt != 0){
+		cout << "Error - send rd req but rdCnt != 0 in CsSM.send_rd" << endl;
+		correct = false;
+	}
 	
-	correct = bsm[req.bank].send_rd(req);
+	correct = correct && bsm[req.bank].send_rd(req);
+	
+	rdCnt	= max_(rdCnt, t_r2r_samecs);
+	wrCnt	= max_(wrCnt, t_r2w_samecs);
+	preCnt	= max_(preCnt, t_r2p_samecs);
+	actCnt	= max_(actCnt, t_r2a_samecs);
 
 	return correct;
 }
 
 bool CsStatusMachine::send_wr(const Req& req){
 
-	bool correct;
+	bool correct = true;
 	
 	if(req.bank >= bankNum){
 		cout << "ERROR - req.bank >= bankNum in CsSM.send_wr" << endl;
 		exit(0);
 	}
+	if(wrCnt != 0){
+		cout << "Error - send wr req but rdCnt != 0 in CsSM.send_wr" << endl;
+		correct = false;
+	}
 	
-	correct = bsm[req.bank].send_wr(req);
+	correct = correct && bsm[req.bank].send_wr(req);
+
+	rdCnt	= max_(rdCnt, t_w2r_samecs);
+	wrCnt	= max_(wrCnt, t_w2w_samecs);
+	preCnt	= max_(preCnt, t_w2p_samecs);
+	actCnt	= max_(actCnt, t_w2a_samecs);
 
 	return correct;
 }
 
 bool CsStatusMachine::need_refresh(){
 	if(curStatus == idle){
-		if(refCnt == 0)
+		if(refCnt <= 5)
 			return true;
 	}
 	return false;
@@ -403,6 +452,15 @@ void CsStatusMachine::update(){
 			cout << "Error - refCnt = 0 and not send ref request in update()" << endl;
 	}
 
+	if(preCnt!=0)
+		preCnt--;
+	if(actCnt!=0)
+		actCnt--;
+	if(rdCnt!=0)
+		rdCnt--;
+	if(wrCnt!=0)
+		wrCnt--;
+
 	if(fawCnt != 0)
 		fawCnt--;
 	if(rrdCnt != 0)
@@ -412,4 +470,124 @@ void CsStatusMachine::update(){
 		(*i).update();
 	}
 }
+
+MultiCsStatusMachine::MultiCsStatusMachine(int csNum_, int bankNum_)
+	:csNum(csNum_),
+	 bankNum(bankNum_),
+	 rdCnt(0),
+	 wrCnt(0){
+	 	for(std::size_t i = 0; i < csNum; i++){
+			CsStatusMachine tmp(i, bankNum);
+			csm.push_back(tmp);
+		}
+	 }
+
+
+CmdStatus MultiCsStatusMachine::get_cmdStatus(const Req& req){
+	CmdStatus tmp;
+	
+	if(req.cs >= csNum){
+		cout << "ERROR - req.cs >= csNum in MulCsSM.get_cmdStatus" << endl;
+		exit(0);
+	}
+	
+	tmp = csm[req.cs].get_cmdStatus(req);
+	
+	if(rdCnt != 0)
+		tmp.gntRd = 0;
+	if(wrCnt != 0)
+		tmp.gntWr = 0;
+	
+	return tmp;
+}
+
+bool MultiCsStatusMachine::send_pre(const Req& req){
+	bool correct = true;
+
+	if(req.cs >= csNum){
+		cout << "ERROR - req.cs >= csNum in MulCsSM.send_pre" << endl;
+		exit(0);
+	}
+	correct = correct && csm[req.cs].send_pre(req);
+	return correct;
+}
+bool MultiCsStatusMachine::send_act(const Req& req){
+	bool correct = true;
+
+	if(req.cs >= csNum){
+		cout << "ERROR - req.cs >= csNum in MulCsSM.send_act" << endl;
+		exit(0);
+	}
+	correct = correct && csm[req.cs].send_act(req);
+	return correct;
+}
+bool MultiCsStatusMachine::send_rd(const Req& req){
+	bool correct = true;
+
+	if(req.cs >= csNum){
+		cout << "ERROR - req.cs >= csNum in MulCsSM.send_rd" << endl;
+		exit(0);
+	}
+	if(rdCnt != 0){
+		cout << "Error - send rd req but rdCnt!=0 in MulCsSM.send_rd" << endl;
+		correct = false;
+	}
+	correct = correct && csm[req.cs].send_rd(req);
+
+	rdCnt = max_(rdCnt, t_r2r_diffcs);
+	wrCnt = max_(rdCnt, t_r2w_diffcs);
+	
+	return correct;
+}
+bool MultiCsStatusMachine::send_wr(const Req& req){
+	bool correct = true;
+
+	if(req.cs >= csNum){
+		cout << "ERROR - req.cs >= csNum in MulCsSM.send_wr" << endl;
+		exit(0);
+	}
+	if(wrCnt != 0){
+		cout << "Error - send wr req but wrCnt!=0 in MulCsSM.send_wr" << endl;
+		correct = false;
+	}
+	correct = correct && csm[req.cs].send_wr(req);
+
+	rdCnt = max_(rdCnt, t_w2r_diffcs);
+	wrCnt = max_(rdCnt, t_w2w_diffcs);
+	
+	return correct;
+}
+
+bool MultiCsStatusMachine::need_refresh(std::size_t csId){
+	if(csId >= csNum){
+		cout << "ERROR - csId >= csNum in MulCsSM.need_refresh" << endl;
+		exit(0);
+	}
+	return csm[csId].need_refresh();
+}
+bool MultiCsStatusMachine::send_ref(std::size_t csId){
+	if(csId >= csNum){
+		cout << "ERROR - csId >= csNum in MulCsSM.send_ref" << endl;
+		exit(0);
+	}
+	return csm[csId].send_ref();
+}
+
+void MultiCsStatusMachine::run_step(){
+	for(auto i = csm.begin(); i < csm.end(); i++){
+		(*i).run_step();
+	}
+}
+void MultiCsStatusMachine::update(){
+	for(auto i = csm.begin(); i < csm.end(); i++){
+		(*i).update();
+	}
+	if(rdCnt!=0)
+		rdCnt--;
+	if(wrCnt!=0)
+		wrCnt--;
+}
+
+
+
 

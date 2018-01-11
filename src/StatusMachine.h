@@ -53,6 +53,10 @@ private:
 	std::size_t bankNum;
 	std::size_t fawCnt;
 	std::size_t rrdCnt;
+	std::size_t preCnt;
+	std::size_t actCnt;
+	std::size_t rdCnt;
+	std::size_t wrCnt;
 	std::size_t refCnt;
 	std::size_t rfcCnt;
 	std::deque<std::size_t> actQueue;
@@ -61,6 +65,7 @@ private:
 	
 	void act_push(std::size_t time = 0);
 	void act_add();
+
 public:
 	CsStatusMachine(int csId_, int bankNum_);
 	CmdStatus get_cmdStatus(const Req&);
@@ -70,6 +75,28 @@ public:
 	bool send_wr(const Req&);
 	bool need_refresh();
 	bool send_ref();
+	void run_step();
+	void update();
+};
+
+class MultiCsStatusMachine{
+private:
+	std::size_t csNum;
+	std::size_t bankNum;
+	std::vector<CsStatusMachine> csm;
+
+	std::size_t rdCnt;
+	std::size_t wrCnt;
+
+public:
+	MultiCsStatusMachine(int csNum_, int bankNum_);
+	CmdStatus get_cmdStatus(const Req&);
+	bool send_pre(const Req&);
+	bool send_act(const Req&);
+	bool send_rd(const Req&);
+	bool send_wr(const Req&);
+	bool need_refresh(std::size_t csId);
+	bool send_ref(std::size_t csId);
 	void run_step();
 	void update();
 };

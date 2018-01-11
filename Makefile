@@ -16,8 +16,8 @@ SRC_FIL += $(SRC_DIR)/MultiPort.cpp
 SRC_FIL += $(SRC_DIR)/TraceInput.cpp
 SRC_FIL += $(SRC_DIR)/MemorySystem.cpp
 SRC_FIL += $(SRC_DIR)/Controller.cpp
-SRC_FIL += $(SRC_DIR)/CommandQueue.cpp
 SRC_FIL += $(SRC_DIR)/StatusMachine.cpp
+SRC_FIL += $(SRC_DIR)/BankCmdQueue.cpp
 SRC_FIL += $(SRC_DIR)/main.cpp
 
 .PHONY: compile clean

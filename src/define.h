@@ -5,6 +5,8 @@
 #include<stdint.h>
 #include<time.h>
 #define DEBUG_PRINT 
+#define INSERT_STRATEGY_1
+//#define INSERT_STRATEGY_2
 
 typedef std::size_t Addr;
 typedef std::size_t Data;
@@ -53,9 +55,10 @@ const std::size_t tCKE	= 48;
 const std::size_t tXP	= 5;
 
 const std::size_t tAL = 0;
-const std::size_t tWL = 0;
+const std::size_t tWL = 7;
 const std::size_t tRL = tAL + tCL;
 
+//---------------same ba set-------------------------
 const std::size_t t_p2p_sameba = 0;
 const std::size_t t_p2a_sameba = tRP;
 const std::size_t t_p2r_sameba = 0;
@@ -75,6 +78,33 @@ const std::size_t t_w2p_sameba = tWL + tCCD + tWR;
 const std::size_t t_w2a_sameba = 0;
 const std::size_t t_w2r_sameba = tWL + tCCD + tWTR;
 const std::size_t t_w2w_sameba = tCCD;
+
+//---------------same cs set-------------------------
+const std::size_t t_p2p_samecs = 0;
+const std::size_t t_p2a_samecs = 0;
+const std::size_t t_p2r_samecs = 0;
+const std::size_t t_p2w_samecs = 0;
+
+const std::size_t t_a2p_samecs = 0;
+const std::size_t t_a2a_samecs = 0;
+const std::size_t t_a2r_samecs = 0;
+const std::size_t t_a2w_samecs = 0;
+
+const std::size_t t_r2p_samecs = tRTP;
+const std::size_t t_r2a_samecs = 0;
+const std::size_t t_r2r_samecs = tCCD;
+const std::size_t t_r2w_samecs = (tRL + tCCD + 2 - tWL);
+
+const std::size_t t_w2p_samecs = tWL + tCCD + tWR;
+const std::size_t t_w2a_samecs = 0;
+const std::size_t t_w2r_samecs = tWL + tCCD + tWTR;
+const std::size_t t_w2w_samecs = tCCD;
+
+//---------------diff cs set-------------------------
+const std::size_t t_w2w_diffcs = tCCD;
+const std::size_t t_w2r_diffcs = tCCD + 2;
+const std::size_t t_r2w_diffcs = tRL + tCCD + 2 - tWL;
+const std::size_t t_r2r_diffcs = tCCD;
 
 
 uint64_t LOG2(uint64_t a);
