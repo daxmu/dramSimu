@@ -22,6 +22,8 @@ public:
 	bool receive_req(Req req);
 	const Req& get_head();
 	void pop_front();
+	void reorder(std::size_t row);
+	std::size_t get_reqNum();
 
 	void run_step();
 	void update();
@@ -54,6 +56,8 @@ public:
 	void send_act(const Req&);
 	void send_rd(const Req&);
 	void send_wr(const Req&);
+
+	std::size_t get_reqNum();
 
 	void run_step();
 	void update();

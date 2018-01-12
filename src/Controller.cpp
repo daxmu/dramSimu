@@ -4,11 +4,17 @@ Controller::Controller(int id, int csNum_, int qLen_, int bankNum_)
 	:ControllerId(id),
 	 inPort("Controller_inPort", 1),
 	 csNum(csNum_),
+	 bankNum(bankNum_),
 	 mcsm(csNum, bankNum_),
-	 tempValid(false){
+	 tempValid(false),
+	 wrPrior(false){
 	 	for(int i = 0; i < csNum_; i++){
 			CsCmdQueue tmp(i, bankNum_, qLen_);
-			ccq.push_back(tmp);
+			wrCcq.push_back(tmp);
+		}
+	 	for(int i = 0; i < csNum_; i++){
+			CsCmdQueue tmp(i, bankNum_, qLen_);
+			rdCcq.push_back(tmp);
 		}
 	 }
 
@@ -50,7 +56,13 @@ void Controller::print_summary(std::size_t cycles){
 	cout << "Controller " << ControllerId << " print summary:" << endl;
 	size_t rdCounter = 0, wrCounter = 0, reqCounter = 0, preCounter = 0, actCounter = 0;
 	
-	for(auto i = ccq.begin(); i < ccq.end(); i++){
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++){
+		rdCounter += (*i).rdCounter;
+		wrCounter += (*i).wrCounter;
+		preCounter += (*i).preCounter;
+		actCounter += (*i).actCounter;
+	}
+	for(auto i = rdCcq.begin(); i < rdCcq.end(); i++){
 		rdCounter += (*i).rdCounter;
 		wrCounter += (*i).wrCounter;
 		preCounter += (*i).preCounter;
@@ -67,25 +79,41 @@ void Controller::print_summary(std::size_t cycles){
 	cout << "    the bus occupied rate = " << ((double)reqCounter*4/cycles) << endl;
 }
 
-void Controller::send_pre(const Req& req){
+void Controller::send_wrpre(const Req& req){
 	cout << "    Controller send pre to cs " << req.cs << ", bank " << req.bank << " " << endl;;
-	ccq[req.cs].send_pre(req);
+	wrCcq[req.cs].send_pre(req);
 	mcsm.send_pre(req);
 }
-void Controller::send_act(const Req& req){
+void Controller::send_wract(const Req& req){
 	cout << "    Controller send act to cs " << req.cs << ", bank " << req.bank << " " << endl;;
-	ccq[req.cs].send_act(req);
+	wrCcq[req.cs].send_act(req);
+	mcsm.send_act(req);
+}
+void Controller::send_rdpre(const Req& req){
+	cout << "    Controller send pre to cs " << req.cs << ", bank " << req.bank << " " << endl;;
+	rdCcq[req.cs].send_pre(req);
+	mcsm.send_pre(req);
+}
+void Controller::send_rdact(const Req& req){
+	cout << "    Controller send act to cs " << req.cs << ", bank " << req.bank << " " << endl;;
+	rdCcq[req.cs].send_act(req);
 	mcsm.send_act(req);
 }
 void Controller::send_rd(const Req& req){
 	cout << "    Controller send rd to cs " << req.cs << ", bank " << req.bank << " " << endl;;
-	ccq[req.cs].send_rd(req);
+	rdCcq[req.cs].send_rd(req);
 	mcsm.send_rd(req);
+
+	if(rdCnt!=0)
+		rdCnt--;
 }
 void Controller::send_wr(const Req& req){
 	cout << "    Controller send wr to cs " << req.cs << ", bank " << req.bank << " " << endl;;
-	ccq[req.cs].send_wr(req);
+	wrCcq[req.cs].send_wr(req);
 	mcsm.send_wr(req);
+
+	if(wrCnt!=0)
+		wrCnt--;
 }
 
 bool Controller::check_status(const CmdStatus &status){
@@ -115,9 +143,9 @@ bool Controller::refresh_control(){
 }
 
 bool Controller::arbitrate_and_send(){
-	vector<Req> pre, act, rd, wr, nop;
+	vector<Req> wrpre, wract, rdpre, rdact, rd, wr, wrnop, rdnop;
 
-	for(auto i = ccq.begin(); i < ccq.end(); i++){
+	for(auto i = rdCcq.begin(); i < rdCcq.end(); i++){
 		for(auto j = (*i).bcq.begin(); j < (*i).bcq.end(); j++){
 			if(!(*j).valid())
 				continue;
@@ -128,38 +156,82 @@ bool Controller::arbitrate_and_send(){
 				exit(0);
 			}
 			if(tmpS.needPre && tmpS.gntPre)
-				pre.push_back(tmpR);
+				rdpre.push_back(tmpR);
 			else if(tmpS.needAct && tmpS.gntAct)
-				act.push_back(tmpR);
+				rdact.push_back(tmpR);
 			else if(tmpS.needRd && tmpS.gntRd)
 				rd.push_back(tmpR);
-			else if(tmpS.needWr && tmpS.gntWr)
-				wr.push_back(tmpR);
 			else
-				nop.push_back(tmpR);
+				rdnop.push_back(tmpR);
 		}
 	}
 
-	if(rd.empty() && wr.empty() && pre.empty() && act.empty()){
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++){
+		for(auto j = (*i).bcq.begin(); j < (*i).bcq.end(); j++){
+			if(!(*j).valid())
+				continue;
+			const Req &tmpR = (*j).get_head();
+			CmdStatus tmpS = mcsm.get_cmdStatus(tmpR);
+			if(!check_status(tmpS)){
+				cout << "ERROR - check_status failed in Controller arbitrate()" << endl;
+				exit(0);
+			}
+			if(tmpS.needPre && tmpS.gntPre)
+				wrpre.push_back(tmpR);
+			else if(tmpS.needAct && tmpS.gntAct)
+				wract.push_back(tmpR);
+			else if(tmpS.needWr && tmpS.gntWr)
+				wr.push_back(tmpR);
+			else
+				wrnop.push_back(tmpR);
+		}
+	}
+
+	if(wrPrior){
+		if(wr.empty() && wrpre.empty() && wract.empty())
+			return false;
+		if(!wr.empty()){
+			send_wr(wr.front());
+			return true;
+		}
+		else if(!wract.empty()){
+			send_wract(wract.front());
+			return true;
+		}
+		else if(!wrpre.empty()){
+			send_wrpre(wrpre.front());
+			return true;
+		}
 		return false;
 	}
-	if(!rd.empty()){
-		send_rd(rd.front());
-		return true;
+	else{
+		if(rd.empty() && rdpre.empty() && rdact.empty())
+			return false;
+		if(!rd.empty()){
+			send_rd(rd.front());
+			return true;
+		}
+		else if(!rdact.empty()){
+			send_rdact(rdact.front());
+			return true;
+		}
+		else if(!rdpre.empty()){
+			send_rdpre(rdpre.front());
+			return true;
+		}
+		return false;
 	}
-	if(!wr.empty()){
-		send_wr(wr.front());
-		return true;
-	}
-	else if(!act.empty()){
-		send_act(act.front());
-		return true;
-	}
-	else if(!pre.empty()){
-		send_pre(pre.front());
-		return true;
-	}
+
 	return false;
+}
+void Controller::reorder(){
+	for(size_t i = 0; i < csNum; i++){
+		for(size_t j = 0; j < bankNum; j++){
+			size_t row = mcsm.get_actRow(i,j);
+			wrCcq[i].bcq[j].reorder(row);
+			rdCcq[i].bcq[j].reorder(row);
+		}
+	}
 }
 
 void Controller::run_step(){
@@ -172,14 +244,10 @@ void Controller::run_step(){
 		}
 	}
 	
-	if(tempValid){
-		if(ccq[tempReq.cs].ready()){
-			ccq[tempReq.cs].receive_req(tempReq);
-			tempValid = false;
-		}
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++){
+		(*i).accept_req();
 	}
-
-	for(auto i = ccq.begin(); i < ccq.end(); i++){
+	for(auto i = rdCcq.begin(); i < rdCcq.end(); i++){
 		(*i).accept_req();
 	}
 
@@ -192,8 +260,56 @@ void Controller::run_step(){
 	mcsm.run_step();
 }
 
+size_t Controller::get_wrreqNum(){
+	size_t sum = 0;
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++)
+		sum += (*i).get_reqNum();
+	return sum;
+}
+
 void Controller::update(){
-	for(auto i = ccq.begin(); i < ccq.end(); i++)
+
+	if(tempValid){
+		if(tempReq.write){
+			if(wrCcq[tempReq.cs].ready()){
+				wrCcq[tempReq.cs].receive_req(tempReq);
+				tempValid = false;
+			}
+		}
+		else{
+			if(rdCcq[tempReq.cs].ready()){
+				rdCcq[tempReq.cs].receive_req(tempReq);
+				tempValid = false;
+			}
+		}
+	}
+	
+	bool wrValid = false;
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++){
+		wrValid = wrValid || (*i).valid();
+	}
+	bool rdValid = false;
+	for(auto i = rdCcq.begin(); i < rdCcq.end(); i++){
+		rdValid = rdValid || (*i).valid();
+	}
+	if(wrPrior){
+		if(!wrValid || (wrCnt == 0)){
+			wrPrior = false;
+			rdCnt = RD_TURNCNT;
+			reorder();
+		}
+	}
+	else{
+		if(!rdValid || ((get_wrreqNum() >= WR_CMDTH_H) && (rdCnt == 0))){
+			wrPrior = true;
+			wrCnt = WR_TURNCNT;
+			reorder();
+		}
+	}
+
+	for(auto i = wrCcq.begin(); i < wrCcq.end(); i++)
+		(*i).update();
+	for(auto i = rdCcq.begin(); i < rdCcq.end(); i++)
 		(*i).update();
 	mcsm.update();
 }

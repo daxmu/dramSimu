@@ -14,8 +14,13 @@ typedef std::size_t Data;
 const std::size_t CHANNEL_NUM = 2;
 const std::size_t CHANNEL_ROUTEBIT = 4;
 
+//----------------scheduler--------------------------
+const std::size_t RD_TURNCNT = 100;
+const std::size_t WR_TURNCNT = 40;
 const std::size_t COMMAND_QUEUE_LENGTH = 16;
+const std::size_t WR_CMDTH_H = 16;
 
+//----------------basic set--------------------------
 const std::size_t CS_NUM = 2;
 const std::size_t BANK_NUM = 8;
 

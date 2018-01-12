@@ -41,6 +41,7 @@ public:
 	bool send_rd(const Req&);
 	bool send_wr(const Req&);
 	bool send_ref();
+	std::size_t get_actRow();
 	void run_step();
 	void update();
 
@@ -75,6 +76,7 @@ public:
 	bool send_wr(const Req&);
 	bool need_refresh();
 	bool send_ref();
+	std::size_t get_actRow(int bankId);
 	void run_step();
 	void update();
 };
@@ -97,6 +99,7 @@ public:
 	bool send_wr(const Req&);
 	bool need_refresh(std::size_t csId);
 	bool send_ref(std::size_t csId);
+	std::size_t get_actRow(int csId, int bankId);
 	void run_step();
 	void update();
 };

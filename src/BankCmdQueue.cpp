@@ -57,6 +57,23 @@ void BankCmdQueue::pop_front(){
 	reqList.pop_front();
 }
 
+void BankCmdQueue::reorder(std::size_t row){
+	if(reqList.empty())
+		return;
+	list<Req> tmp;
+	for(auto i = reqList.begin(); i != reqList.end(); i++){
+		if((*i).row == row){
+			tmp.push_back(*i);
+			i = reqList.erase(i);
+			i--;
+		}
+	}
+	reqList.splice(reqList.begin(), tmp, tmp.begin(), tmp.end());
+}
+size_t BankCmdQueue::get_reqNum(){
+	return reqList.size();
+}
+
 void BankCmdQueue::run_step(){}
 void BankCmdQueue::update(){}
 
@@ -147,6 +164,14 @@ void CsCmdQueue::send_wr(const Req& req){
 	}
 	bcq[req.bank].pop_front();
 	wrCounter++;
+}
+
+size_t CsCmdQueue::get_reqNum(){
+	size_t sum = 0;
+	for(auto i = bcq.begin(); i < bcq.end(); i++){
+		sum += (*i).get_reqNum();
+	}
+	return sum;
 }
 
 void CsCmdQueue::run_step(){

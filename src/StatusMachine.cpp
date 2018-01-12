@@ -205,6 +205,9 @@ bool BankStatusMachine::send_ref(){
 	curStatus = idle;
 	return true;
 }
+size_t BankStatusMachine::get_actRow(){
+	return curRow;
+}
 
 void BankStatusMachine::run_step(){}
 
@@ -431,6 +434,9 @@ bool CsStatusMachine::send_ref(){
 
 	return correct;
 }
+size_t CsStatusMachine::get_actRow(int bankId){
+	return bsm[bankId].get_actRow();
+}
 
 void CsStatusMachine::run_step(){
 }
@@ -571,6 +577,10 @@ bool MultiCsStatusMachine::send_ref(std::size_t csId){
 		exit(0);
 	}
 	return csm[csId].send_ref();
+}
+
+size_t MultiCsStatusMachine::get_actRow(int csId, int bankId){
+	return csm[csId].get_actRow(bankId);
 }
 
 void MultiCsStatusMachine::run_step(){
