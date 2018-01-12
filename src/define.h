@@ -28,7 +28,7 @@ const std::size_t CS_BIT_NUM = 1;
 const std::size_t CID_BIT_NUM = 0;
 const std::size_t BG_BIT_NUM = 0;
 const std::size_t BANK_BIT_NUM = 3;
-const std::size_t ROW_LOWBIT_NUM = 10;
+const std::size_t ROW_LOWBIT_NUM = 13;
 const std::size_t ROW_HIGHBIT_NUM = 0;
 const std::size_t COL_LOWBIT_NUM = 4;
 const std::size_t COL_HIGHBIT_NUM = 6;
@@ -123,4 +123,5 @@ inline const T& max_(const T &a, const T &b){
 
 void print_config_message();
 
+bool check_config();
 #endif

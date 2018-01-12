@@ -17,6 +17,8 @@ void run_step(TraceInput &, MemorySystem &);
 
 int main(int argc, char **argv){
 	
+	check_config();
+
 	time_t start_c = clock();
 	int Cycles = 100;
 	TraceInput traceInput;

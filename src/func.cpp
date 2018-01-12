@@ -1,4 +1,6 @@
+#include <vector>
 #include "define.h"
+using namespace std;
 
 uint64_t LOG2(uint64_t a){
 	int tmp = 0;
@@ -98,3 +100,62 @@ void print_config_message(){
 	std::cout << "********************************************************" << std::endl;
 	std::cout << std::endl << std::endl;
 }
+
+bool check_config(){
+	vector<int> start, end;
+
+	start.push_back(CHANNEL_ROUTEBIT);
+	end.push_back(CHANNEL_ROUTEBIT + 1);
+
+	if(CS_BIT_NUM){
+		start.push_back(CS_BIT_POS);
+		end.push_back(CS_BIT_POS + CS_BIT_NUM);
+	}
+	if(CID_BIT_NUM){
+		start.push_back(CID_BIT_POS);
+		end.push_back(CID_BIT_POS + CID_BIT_NUM);
+	}
+	if(BG_BIT_NUM){
+		start.push_back(BG_BIT_POS);
+		end.push_back(BG_BIT_POS + BG_BIT_NUM);
+	}
+	if(BANK_BIT_NUM){
+		start.push_back(BANK_BIT_POS);
+		end.push_back(BANK_BIT_POS + BANK_BIT_NUM);
+	}
+	if(ROW_LOWBIT_NUM){
+		start.push_back(ROW_LOWBIT_POS);
+		end.push_back(ROW_LOWBIT_POS + ROW_LOWBIT_NUM);
+	}
+	if(ROW_HIGHBIT_NUM){
+		start.push_back(ROW_HIGHBIT_POS);
+		end.push_back(ROW_HIGHBIT_POS + ROW_HIGHBIT_NUM);
+	}
+	if(COL_LOWBIT_NUM){
+		start.push_back(COL_LOWBIT_POS);
+		end.push_back(COL_LOWBIT_POS + COL_LOWBIT_NUM);
+	}
+	if(COL_HIGHBIT_NUM){
+		start.push_back(COL_HIGHBIT_POS);
+		end.push_back(COL_HIGHBIT_POS + COL_HIGHBIT_NUM);
+	}
+
+	for(auto i = start.begin(); i < start.end(); i++){
+		for(auto j = end.begin(); j < end.end(); j++){
+			auto k = start.begin() + (j - end.begin());
+			if(i != k){
+				if(((*i) < (*j)) && ((*i) >= (*k))){
+					cout << "ERROR - in check config " << endl;
+					cout << *i << " " << *k << " " << *j << endl;
+					exit(0);
+				}
+			}
+		}
+	}
+
+	cout << "Check config Success!" << endl;
+	return true;
+}
+
+
+
