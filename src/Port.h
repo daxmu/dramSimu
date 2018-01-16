@@ -26,6 +26,7 @@ public:
 	bool init_check();
 	bool valid();
 	bool ready();
+	const Req& get_head();
 	bool receive_req(Req);
 };
 

@@ -61,6 +61,7 @@ Req TraceInput::get_req(){
 	tmp >> hex >> addr;
 	req.addr = addr;
 	req.valid = 1;
+	req.length = REQ_LENGTH;
 
 	if((cmdStr == "P_MEM_WR") ||
 	   (cmdStr == "BOFF")){

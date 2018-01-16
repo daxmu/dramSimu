@@ -3,6 +3,7 @@ run
 gdb_run
 *.swp
 log
+fcfs_log
 logs
 trash_bin
 gitdiff

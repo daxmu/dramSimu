@@ -1,5 +1,7 @@
 #include "Controller.h"
 
+using namespace std;
+
 Controller::Controller(int id, int csNum_, int qLen_, int bankNum_)
 	:ControllerId(id),
 	 inPort("Controller_inPort", 1),

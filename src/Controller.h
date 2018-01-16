@@ -10,8 +10,6 @@
 #include "Port.h"
 #include "BankCmdQueue.h"
 
-using namespace std;
-
 class Controller{
 private:
 	int ControllerId;

@@ -11,7 +11,12 @@
 #include "Req.h"
 #include "Port.h"
 #include "MultiPort.h"
-#include "Controller.h"
+
+//#ifdef LOONGSON_MC
+#include "LSMC.h"
+//#else
+//#include "Controller.h"
+//#endif
 
 class MemorySystem{
 private:

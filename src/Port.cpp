@@ -23,6 +23,10 @@ bool Port::ready(){
 	return !reqBuffer.is_full();
 }
 
+const Req& Port::get_head(){
+	return reqBuffer.get_head();
+}
+
 bool Port::receive_req(Req req){
 	if(!ready()){
 		cout << "ERROR - " << portName << " is not ready() and asked receive_req" << endl;

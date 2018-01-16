@@ -6,7 +6,7 @@
 #include<time.h>
 #define DEBUG_PRINT 
 #define INSERT_STRATEGY_1
-//#define INSERT_STRATEGY_2
+//define INSERT_STRATEGY_2 //FCFS
 
 typedef std::size_t Addr;
 typedef std::size_t Data;
@@ -15,9 +15,12 @@ const std::size_t CHANNEL_NUM = 2;
 const std::size_t CHANNEL_ROUTEBIT = 4;
 
 //----------------scheduler--------------------------
+const std::size_t REQ_LENGTH = 4;
+
 const std::size_t RD_TURNCNT = 100;
 const std::size_t WR_TURNCNT = 40;
 const std::size_t COMMAND_QUEUE_LENGTH = 16;
+const std::size_t TIMING_QUEUE_LENGTH = 4;
 const std::size_t WR_CMDTH_H = 16;
 
 //----------------basic set--------------------------
@@ -28,7 +31,7 @@ const std::size_t CS_BIT_NUM = 1;
 const std::size_t CID_BIT_NUM = 0;
 const std::size_t BG_BIT_NUM = 0;
 const std::size_t BANK_BIT_NUM = 3;
-const std::size_t ROW_LOWBIT_NUM = 13;
+const std::size_t ROW_LOWBIT_NUM = 10;
 const std::size_t ROW_HIGHBIT_NUM = 0;
 const std::size_t COL_LOWBIT_NUM = 4;
 const std::size_t COL_HIGHBIT_NUM = 6;
